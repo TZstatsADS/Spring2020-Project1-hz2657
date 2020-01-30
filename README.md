@@ -3,7 +3,7 @@
 ## Project 1: A "data story" on the songs of our times
 
 <img src="figs/title1.jpeg" width="500">
-<img src="https://blog.oup.com/wp-content/uploads/2016/02/1260-music.jpg" width="500">
+<img src="https://blog.oup.com/wp-content/uploads/2016/02/1260-music.jpg" width="700">
 
 ### [Project Description](doc/)
 
