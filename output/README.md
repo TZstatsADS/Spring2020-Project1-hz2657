@@ -2,5 +2,8 @@
 
 ### Output folder
 
-The output directory contains analysis output, processed datasets, logs, or other processed things.
+The output directory contains 
+
+(1) processed datasets
+(2) analysis output
 
