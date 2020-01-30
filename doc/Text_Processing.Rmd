@@ -1,6 +1,6 @@
 ---
-title: "Stem Completion"
-author: "Chengliang Tang, Arpita Shah, Yujie Wang and Tian Zheng"
+title: "Data Prepration"
+author: "Huizhe (Sunny) ZHU"
 output: html_notebook
 ---
 
@@ -8,23 +8,11 @@ output: html_notebook
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-"lyrics.csv" is a filtered corpus of 380,000+ song lyrics from from MetroLyrics. You can read more about it on [Kaggle](https://www.kaggle.com/gyani95/380000-lyrics-from-metrolyrics).
 
-"artists.csv" provides the background information of all the artistis. These information are scraped from [LyricsFreak](https://www.lyricsfreak.com/).
-
-In this R notebook, we process the raw textual data for our data analysis.
-
-### Step 0 - Load all the required libraries
-
-From the packages' descriptions:
-
-+ `tm` is a framework for text mining applications within R;
-+ `data.table` is a package for fast aggregation of large data;
-+ `tidyverse` is an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures;
-+ `tidytext` allows text mining using 'dplyr', 'ggplot2', and other tidy tools;
-+ `DT` provides an R interface to the JavaScript library DataTables.
-
-```{r load libraries, warning=FALSE, message=FALSE}
+### Step 0 - Load libraries
+Install packages & Load libraries
+```{r load libraries, message=FALSE, warning=FALSE}
+install.packages('broom')
 library(tm)
 library(data.table)
 library(tidytext)
@@ -32,29 +20,34 @@ library(tidyverse)
 library(DT)
 ```
 
-### Step 1 - Load the data to be cleaned and processed
-
+### Step 1 - Load the data
 ```{r}
 # load lyrics data
-load('../data/lyrics.RData') 
+library(readr)
+raw_lyrics <- read.csv("lyrics.csv", stringsAsFactors = FALSE)
 ```
 
 
 ### Step 2 - Preliminary cleaning of text
 
-We clean the text by converting all the letters to the lower case, and removing punctuation, numbers, empty words and extra white space.
-
+Convert letters to the lower case, remove punctuation, numbers, empty words and extra white space.
 ```{r text processing in tm}
 # function for removimg leading and trailing whitespace from character strings 
 leadingWhitespace <- content_transformer(function(x) str_trim(x, side = "both"))
+
 # remove stop words
 data("stop_words")
 word <- c("lot", "today", "months", "month", "wanna", "wouldnt", "wasnt", "ha", "na", "ooh", "da",
         "gonna", "im", "dont", "aint", "wont", "yeah", "la", "oi", "nigga", "fuck",
           "hey", "year", "years", "last", "past", "feel")
 stop_words <- c(stop_words$word, word)
+
+```
+
+
+```{r}
 # clean the data and make a corpus
-corpus <- VCorpus(VectorSource(dt_lyrics$lyrics))%>%
+corpus <- VCorpus(VectorSource(raw_lyrics$lyrics))%>%
   tm_map(content_transformer(tolower))%>%
   tm_map(removePunctuation)%>%
   tm_map(removeWords, character(0))%>%
@@ -65,30 +58,32 @@ corpus <- VCorpus(VectorSource(dt_lyrics$lyrics))%>%
 ```
 
 
-### Step 3 - Stemming words and converting tm object to tidy object
+### Step 3 - Stemming and converting to tidy object
 
-Stemming reduces a word to its word *stem*. We stem the words here and then convert the "tm" object to a "tidy" object for much faster processing.
-
+Stemming reduces a word to its word *stem*. Each row contains 1 song - its stemmed words
+* Note: 11 empty lines 
 ```{r stemming}
 stemmed <- tm_map(corpus, stemDocument) %>%
   tidy() %>%
   select(text)
 ```
 
-### Step 4 - Creating tidy format of the dictionary to be used for completing stems
 
-We also need a dictionary to look up the words corresponding to the stems.
+### Step 4 - Tokenization on original words
 
+*9.51* million rows (words) in total, one column
 ```{r tidy dictionary}
 dict <- tidy(corpus) %>%
   select(text) %>%
   unnest_tokens(dictionary, text)
 ```
 
-### Step 5 - Combining stems and dictionary into the same tibble
 
-Here we combine the stems and the dictionary into the same "tidy" object.
+### Step 5 - Tokenization on stemmed words
 
+Add ID = row_number, dict = original word
+
+*9.51* million rows, 3 columns
 ```{r tidy stems with dictionary}
 completed <- stemmed %>%
   mutate(id = row_number()) %>%
@@ -96,12 +91,12 @@ completed <- stemmed %>%
   bind_cols(dict) 
 ```
 
+
 ### Step 6 - Stem completion
 
-Lastly, we complete the stems by picking the corresponding word with the highest frequency.
-
+Picking the original word (from the same root) with the highest frequency. The new column created -  'word' - will be used to replace stem, which is sometimes hard for people to understand. 
 ```{r stem completion, warning=FALSE, message=FALSE}
-completed <- completed %>%
+completed1 <- completed %>%
   group_by(stems) %>%
   count(dictionary) %>%
   mutate(word = dictionary[which.max(n)]) %>%
@@ -112,29 +107,248 @@ completed <- completed %>%
   select(-stems)
 ```
 
-### Step 8 - Pasting stem completed individual words into their respective lyrics
 
-We want our processed words to resemble the structure of the original lyrics. So we paste the words together to form processed lyrics.
+### Step 7 - Pasting stem completed individual words into their respective lyrics
 
+Put 'word' generated from Step 6, back to each song row - each row contains words like before - but the words are transforme, from -> stemmed -> completed stem
 ```{r reverse unnest}
-completed <- completed %>%
+completed2 <- completed1 %>%
   group_by(id) %>%
   summarise(stemmedwords= str_c(word, collapse = " ")) %>%
   ungroup()
 ```
 
-### Step 9 - Keeping a track of the processed lyrics with their own ID
 
+### Step 8 - Keeping a track of the processed lyrics with their own ID
 ```{r cleaned hm_data, warning=FALSE, message=FALSE}
-dt_lyrics <- dt_lyrics %>%
+raw_lyrics1 <- raw_lyrics %>%
   mutate(id = row_number()) %>%
-  inner_join(completed)
+  inner_join(completed2)
 ```
 
-### Exporting the processed text data into a CSV file
 
+### Step 9 - Exporting the processed text data into a CSV file
 ```{r export data}
-save(dt_lyrics, file="../output/processed_lyrics.RData")
+save(raw_lyrics, file="../output/processed_lyrics2.RData")
 ```
 
 The final processed data is ready to be used for any kind of analysis.
+
+
+
+# Songs Classification - Country, Pop, Hiphop, R&B
+
+### Step 1 - Create sub-dataset
+In the dataset, there are 7534 Country songs, 18697 Pop songs,  8905 HipHops, and 2174 R&B. 
+```{r}
+table(raw_lyrics1$genre)
+```
+
+
+```{r}
+country = raw_lyrics1[raw_lyrics1$genre == 'Country',]
+pop = raw_lyrics1[raw_lyrics1$genre == 'Pop',]
+hiphop = raw_lyrics1[raw_lyrics1$genre == 'Hip-Hop',]
+RB = raw_lyrics1[raw_lyrics1$genre == 'R&B',]
+```
+
+
+
+
+### Step 2 - Compare their lyrics length
+
+random select 1000 songs and visulize their length comparision
+
+```{r}
+total_four_songs = bind_rows(pop,country,hiphop,RB)
+total_four_songs<-total_four_songs%>%
+  mutate(length=length(stemmedwords))
+
+```
+
+
+```{r}
+mean(total_four_songs$length, na.rm=T)
+tapply(X=total_four_songs$length, INDEX = total_four_songs$genre, FUN = 'mean')
+
+```
+
+
+
+
+
+
+
+
+
+### Step 3 - Compare their high-frequency words - use it to define its topics
+
+# 3.1 Pop
+```{r}
+tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+
+# barplot
+barplot(tidy_pop[1:10,]$n, las = 2, names.arg = tidy_pop[1:10,]$word,
+        col ="pink", main ="Pop - Most frequent words",
+        ylab = "Word frequencies")
+```
+
+# 3.2 Country
+```{r}
+tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+
+# barplot
+barplot(tidy_country[1:10,]$n, las = 2, names.arg = tidy_country[1:10,]$word,
+        col ="light blue", main ="Country - Most frequent words",
+        ylab = "Word frequencies")
+```
+
+# 3.3 HipHops
+
+```{r}
+tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+
+# barplot
+barplot(tidy_hiphop[1:10,]$n, las = 2, names.arg = tidy_hiphop[1:10,]$word,
+        col ="orange", main ="Hiphop - Most frequent words",
+        ylab = "Word frequencies")
+
+```
+
+
+# 3.4 R&B
+```{r}
+tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+
+# barplot
+barplot(tidy_RB[1:10,]$n, las = 2, names.arg = tidy_RB[1:10,]$word,
+        col ="black", main ="R&B - Most frequent words",
+        ylab = "Word frequencies")
+```
+
+
+
+
+
+
+
+
+### Step 4 - Compare their emotions
+
+Now let's check on the sentiment!
+
+Compare the sentiment score for these 4 different types of songs. 
+
+# 4.1 Pop
+
+```{r}
+positive <- get_sentiments("bing") %>%
+  filter(sentiment == "positive")
+
+negative <- get_sentiments("bing") %>%
+  filter(sentiment == "negative")
+```
+
+The top 10 positive words in Pop songs include: 
+```{r}
+tidy_pop %>%
+  semi_join(positive) 
+```
+The top 10 positive words in Pop songs include: 
+```{r}
+tidy_pop_negative <- tidy_pop%>%
+  semi_join(negative) 
+head(tidy_pop_negative,10)
+```
+
+we count up how many positive and negative words there are in each genre. Let’s find a sentiment score for each word  -- compare setiment along different genres
+
+Referece:https://www.tidytextmining.com/sentiment.html from *Text mining with R*
+
+# sentiment for each genre 
+
+
+# Combine the first 400 songs of each genre
+
+```{r}
+pop_400 = pop[1:400,]
+country_400 = country[1:400,]
+hiphop_400 = hiphop[1:400,]
+RB_400 = RB[1:400,]
+
+total_400 = bind_rows(pop_400,country_400,hiphop_400,RB_400)
+
+tidy_total_400 <- unnest_tokens(total_400, output = 'word', token = 'words', input = stemmedwords)
+
+```
+
+
+From the diagram, we can see, Hip-hop and R&B tend to have stronger emotions, while country and pop are more gentle.
+
+```{r}
+library(tidyr)
+bing <- get_sentiments("bing")
+
+songs_sentiment_try <- tidy_total_400 %>%
+  inner_join(bing) %>%
+  count(genre,song,sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genre))+
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  facet_wrap(~genre, ncol = 2, scales = "free_x")
+
+```
+
+
+
+
+
+
+
+
+# 4.2 Country
+
+# 4.3 Hop-Hop
+
+
+
+# 4.4 R&D
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
