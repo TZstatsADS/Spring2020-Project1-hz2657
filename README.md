@@ -12,9 +12,7 @@ Term: Fall 2019
 + Projec title: Tell the difference between Country, Pop, and Hiphop
 + This project is conducted by [Huizhe (Sunny) ZHU]
 
-+ Project summary: For some music lovers, them can distinguish different type songs easily. For me, I can distinguish the popular songs and classical/traditional songs, but cannot distinguish certain type of songs, including Country, Pop, and Hiphop. 
-
-This projects is to help people like me - to identify the characteristics of Country, Pop, and Hiphop
++ Project summary: For some music lovers, them can distinguish different type songs easily. For me, I can distinguish the popular songs and classical/traditional songs, but cannot distinguish certain type of songs, including Country, Pop, and Hiphop.  This projects is to help people like me - to identify the characteristics of Country, Pop, and Hiphop
  songs, by analyzing the lyrics database. 
 
 
