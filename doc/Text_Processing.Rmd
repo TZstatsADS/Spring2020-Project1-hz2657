@@ -1,17 +1,26 @@
 ---
-title: "Data Prepration"
+title: 'Tell the difference: Pop or Country, Hiphop or R&B?'
 author: "Huizhe (Sunny) ZHU"
-output: html_notebook
+output:
+  html_notebook: default
+  html_document:
+    df_print: paged
+  pdf_document: default
 ---
+
+Not many people can tell the difference between Country music and Pop music. Pop means 'popular', while country music is also popular in many regions including the US. Meanwhile, Rhythm & Blues (R&B) is considered as a mix of Pop, Hip-Hop etc. It is difficult to distinguish Pop or Country, Hiphop or R&B. 
+
+Given the database that contains more than 120,000 songs, it is exciting to identify the differences between these genres. 
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 
-### Step 0 - Load libraries
+#### Step 0 - Load libraries
 Install packages & Load libraries
-```{r load libraries, message=FALSE, warning=FALSE}
+```{r load libraries, message=FALSE, warning=FALSE, include = FALSE}
 install.packages('broom')
 library(tm)
 library(data.table)
@@ -20,15 +29,16 @@ library(tidyverse)
 library(DT)
 ```
 
-### Step 1 - Load the data
-```{r}
+#### Step 1 - Load the data
+```{r, include = FALSE}
 # load lyrics data
 library(readr)
 raw_lyrics <- read.csv("lyrics.csv", stringsAsFactors = FALSE)
+
 ```
 
 
-### Step 2 - Preliminary cleaning of text
+#### Step 2 - Preliminary cleaning of text
 
 Convert letters to the lower case, remove punctuation, numbers, empty words and extra white space.
 ```{r text processing in tm}
@@ -58,7 +68,7 @@ corpus <- VCorpus(VectorSource(raw_lyrics$lyrics))%>%
 ```
 
 
-### Step 3 - Stemming and converting to tidy object
+#### Step 3 - Stemming and converting to tidy object
 
 Stemming reduces a word to its word *stem*. Each row contains 1 song - its stemmed words
 * Note: 11 empty lines 
@@ -69,7 +79,7 @@ stemmed <- tm_map(corpus, stemDocument) %>%
 ```
 
 
-### Step 4 - Tokenization on original words
+#### Step 4 - Tokenization on original words
 
 *9.51* million rows (words) in total, one column
 ```{r tidy dictionary}
@@ -79,7 +89,7 @@ dict <- tidy(corpus) %>%
 ```
 
 
-### Step 5 - Tokenization on stemmed words
+#### Step 5 - Tokenization on stemmed words
 
 Add ID = row_number, dict = original word
 
@@ -92,7 +102,7 @@ completed <- stemmed %>%
 ```
 
 
-### Step 6 - Stem completion
+#### Step 6 - Stem completion
 
 Picking the original word (from the same root) with the highest frequency. The new column created -  'word' - will be used to replace stem, which is sometimes hard for people to understand. 
 ```{r stem completion, warning=FALSE, message=FALSE}
@@ -108,7 +118,7 @@ completed1 <- completed %>%
 ```
 
 
-### Step 7 - Pasting stem completed individual words into their respective lyrics
+#### Step 7 - Pasting stem completed individual words into their respective lyrics
 
 Put 'word' generated from Step 6, back to each song row - each row contains words like before - but the words are transforme, from -> stemmed -> completed stem
 ```{r reverse unnest}
@@ -119,7 +129,7 @@ completed2 <- completed1 %>%
 ```
 
 
-### Step 8 - Keeping a track of the processed lyrics with their own ID
+#### Step 8 - Keeping a track of the processed lyrics with their own ID
 ```{r cleaned hm_data, warning=FALSE, message=FALSE}
 raw_lyrics1 <- raw_lyrics %>%
   mutate(id = row_number()) %>%
@@ -127,18 +137,21 @@ raw_lyrics1 <- raw_lyrics %>%
 ```
 
 
-### Step 9 - Exporting the processed text data into a CSV file
+#### Step 9 - Exporting the processed text data into a CSV file
 ```{r export data}
-save(raw_lyrics, file="../output/processed_lyrics2.RData")
+save(raw_lyrics1, file="../output/processed_lyrics3.RData")
 ```
 
 The final processed data is ready to be used for any kind of analysis.
 
 
 
-# Songs Classification - Country, Pop, Hiphop, R&B
 
-### Step 1 - Create sub-dataset
+
+
+# Songs Classification - Country vs Pop, Hiphop vs R&B
+
+#### Step 1 - Create sub-dataset
 In the dataset, there are 7534 Country songs, 18697 Pop songs,  8905 HipHops, and 2174 R&B. 
 ```{r}
 table(raw_lyrics1$genre)
@@ -155,22 +168,28 @@ RB = raw_lyrics1[raw_lyrics1$genre == 'R&B',]
 
 
 
-### Step 2 - Compare their lyrics length
+#### Step 2 - Compare lyrics length
 
 random select 1000 songs and visulize their length comparision
 
+Hip Hop is longer than R&B.
+Pop tends to be longer than country songs. 
+
 ```{r}
+library(dplyr)
+library(ngram)
 total_four_songs = bind_rows(pop,country,hiphop,RB)
-total_four_songs<-total_four_songs%>%
-  mutate(length=length(stemmedwords))
+
+library(stringr)
+total_four_songs$word_count <- str_count(total_four_songs$lyrics, '\\s+')+1
 
 ```
+
 
 
 ```{r}
-mean(total_four_songs$length, na.rm=T)
-tapply(X=total_four_songs$length, INDEX = total_four_songs$genre, FUN = 'mean')
-
+boxplot(word_count~genre,data=total_four_songs, main = "Comparision of Length",col = "orange",
+   xlab="genre", ylab="length")
 ```
 
 
@@ -179,11 +198,12 @@ tapply(X=total_four_songs$length, INDEX = total_four_songs$genre, FUN = 'mean')
 
 
 
+#### Step 3 - Compare their high-frequency words - use it to define its topics
 
+Pop and country are simiar. 
+If try to make Love, baby .. etc. as new stop words, see what's left .. 
 
-### Step 3 - Compare their high-frequency words - use it to define its topics
-
-# 3.1 Pop
+#### 3.1 Pop
 ```{r}
 tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
@@ -194,7 +214,7 @@ barplot(tidy_pop[1:10,]$n, las = 2, names.arg = tidy_pop[1:10,]$word,
         ylab = "Word frequencies")
 ```
 
-# 3.2 Country
+#### 3.2 Country
 ```{r}
 tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
@@ -205,7 +225,7 @@ barplot(tidy_country[1:10,]$n, las = 2, names.arg = tidy_country[1:10,]$word,
         ylab = "Word frequencies")
 ```
 
-# 3.3 HipHops
+#### 3.3 HipHops
 
 ```{r}
 tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = stemmedwords)%>%
@@ -219,7 +239,7 @@ barplot(tidy_hiphop[1:10,]$n, las = 2, names.arg = tidy_hiphop[1:10,]$word,
 ```
 
 
-# 3.4 R&B
+#### 3.4 R&B
 ```{r}
 tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
@@ -243,7 +263,10 @@ Now let's check on the sentiment!
 
 Compare the sentiment score for these 4 different types of songs. 
 
-# 4.1 Pop
+Hip hop and R&B are more similar, tend to haev stronger emotion variations. Hip-hop tends to have more negative words that R&B. 
+
+Country and Pop are more similar. Their emotions are more gentle, and they both contains balanced emotions. 
+
 
 ```{r}
 positive <- get_sentiments("bing") %>%
@@ -260,6 +283,7 @@ tidy_pop %>%
 ```
 The top 10 positive words in Pop songs include: 
 ```{r}
+library(dplyr)
 tidy_pop_negative <- tidy_pop%>%
   semi_join(negative) 
 head(tidy_pop_negative,10)
@@ -306,26 +330,13 @@ ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genr
 ```
 
 
+# Summary 
 
 
 
 
-
-
-# 4.2 Country
-
-# 4.3 Hop-Hop
-
-
-
-# 4.4 R&D
-
-
-
-
-
-
-
+### References
+Quora (2019) https://www.quora.com/How-do-you-differentiate-between-a-country-song-and-a-pop-song-just-by-listening-to-it
 
 
 
