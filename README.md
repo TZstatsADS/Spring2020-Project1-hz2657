@@ -12,7 +12,7 @@ Term: Srping 2020
 + Projec title: Tell the difference between Country, Pop, Hiphop, R&B
 + This project is conducted by [Huizhe (Sunny) ZHU]
 
-+ Project summary: For some music lovers, them can distinguish different type songs easily. For me, I can only distinguish the popular songs and classical/traditional songs, but cannot tell certain type of songs, especially Country, Pop, Hiphop, R&B. They are so similar. This projects is to help people like me - identify the characteristics of these
++ Project summary: For some music lovers, them can distinguish different type songs easily. For me, I can only distinguish the popular songs and classical/traditional songs, but cannot tell certain type of songs, especially Country, Pop, Hiphop, and R&B. They are so similar. This projects is to help people like me - identify the characteristics of these
  songs, by analyzing the lyrics database. 
 
 
