@@ -208,15 +208,15 @@ total_four_songs <- total_four_songs[-c(29439,29442,33045,28849),]
 
 Next, let's analyze their corresponding high frequency words and use it to define its topics
 
-Pop and country are simiar. The most frequent words include Love, baby, heart, girl/boy.
+Pop and country are simiar. The most frequent words include Love, baby, heart, girl/boy, eyes, world.
 
-Pop contains more words:
+Pop contains more words: chorus, 
 
-Country songs contain more words: 
+Country songs contain more words: home, hand
 
 
 #### 2.1 Pop
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
@@ -226,7 +226,7 @@ barplot(tidy_pop[1:30,]$n, las = 2, names.arg = tidy_pop[1:30,]$word,
         ylab = "Word frequencies")
 ```
 
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyr)
 
 ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genre))+
@@ -238,7 +238,7 @@ ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genr
 
 
 
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 # word cloud for pop
 install.packages('wordcloud')
 library(wordcloud)
@@ -254,7 +254,7 @@ wordcloud (corpus_pop, scale=c(5,0.5), max.words=100, random.order=FALSE,
 
 
 #### 2.2 Country
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
@@ -266,7 +266,15 @@ barplot(tidy_country[1:30,]$n, las = 2, names.arg = tidy_country[1:30,]$word,
 
 #### 2.3 HipHops
 
-```{r}
+HipHops and R&B's most frequent words is also Love. Other than that, they both include baby, time, girl.
+
+HipHops contains more *** negative words:, 
+
+R&B is more similar to pop/country songs regarding word frequency. 
+
+
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
@@ -279,7 +287,7 @@ barplot(tidy_hiphop[1:20,]$n, las = 2, names.arg = tidy_hiphop[1:20,]$word,
 
 
 #### 2.4 R&B
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
@@ -302,7 +310,7 @@ Now let's check on the sentiment!
 
 Compare the sentiment score for these 4 different types of songs. 
 
-Hip hop and R&B are more similar, tend to haev stronger emotion variations. Hip-hop tends to have more negative words that R&B. 
+Hip hop and R&B are more similar, tend to have stronger emotions Hip-hop tends to have more negative words that R&B. 
 
 Country and Pop are more similar. Their emotions are more gentle, and they both contains balanced emotions. 
 
