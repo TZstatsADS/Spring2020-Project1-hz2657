@@ -1,5 +1,6 @@
 ---
-title: 'Tell the difference: Pop or Country, Hiphop or R&B'
+title: 'Listen: Pop or Country, Hiphop or R&B'
+
 author: "Huizhe (Sunny) ZHU"
 output:
   html_notebook: default
@@ -7,10 +8,10 @@ output:
     df_print: paged
   pdf_document: default
 ---
-
+\
 People on internet are arguing about the difference between Country music and Pop music. Pop represents 'popular', while country music is also popular in many regions including the US, and that makes it difficult to distuinguish the two genres. Meanwhile, Rhythm & Blues (R&B) is considered as a mix of Pop, Hip-Hop etc, thus it is also difficult to distinguish Hiphop or R&B. 
 
-Given the 'lyrics' database that contains more than 120,000 songs, we have the chance to identify the differences among these genres by real examples. 
+Given the 'lyrics' database that contains more than 120,000 songs, we here have the chance to identify the differences among these genres by real examples. 
 
 
 ```{r setup, include=FALSE}
@@ -137,8 +138,7 @@ save(raw_lyrics1, file="../output/processed_lyrics3.RData")
 ```
 
 
-
-In the lyrics dataset, there are 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B. 
+In the lyrics dataset, there are 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B songs. 
 
 ```{r,include = FALSE}
 #### Step 1 - Create sub-dataset
@@ -155,12 +155,36 @@ RB = raw_lyrics1[raw_lyrics1$genre == 'R&B',]
 ```
 
 
+\
 
 #### 1. Compare lyrics length
 
-According to the boxplot, we can find out: 
-Hip-Hop tends to be longer than R&B.
-Pop tends to be longer than country songs. 
+According to the boxplot, we can see Pop music is longer than country songs on average, and has a larger variance. While country music tends to be shorter and has a smaller variance. 
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+pop_country = bind_rows(pop,country)
+
+pop_country$word_count <- str_count(pop_country$lyrics, '\\s+')+1
+
+pop_country <- pop_country[-c(621,1665),]
+
+boxplot(word_count~genre,data=pop_country, main = "Lyrics Length between Country & Pop",col=(c("lightblue2","lavenderblush")),alpha=0.2, ylab="lyrics Length",   xlab="Genre",cex.lab=0.8, cex.axis=0.8, cex.main=1, cex.sub=0.5)
+```
+
+On average, Hip-Hop tends to be longer than R&B and has a larger variance, while R&B tends to be shorter and has smaller variance. 
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+hiphop_RB = bind_rows(hiphop,RB)
+
+hiphop_RB$word_count <- str_count(hiphop_RB$lyrics, '\\s+')+1
+
+hiphop_RB <- hiphop_RB[-c(3208,3211),]
+
+boxplot(word_count~genre,data=hiphop_RB, main = "Lyrics Length between Hip-Hop & R&B",col=(c("lightblue2","lavenderblush")),alpha=0.8,   xlab="Genre", ylab="lyrics Length",cex.lab=0.8, cex.axis=0.8, cex.main=1, cex.sub=0.5)
+```
+
+
+
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
@@ -176,60 +200,6 @@ total_four_songs <- total_four_songs[-c(29439,29442,33045,28849),]
 
 ```
 
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-boxplot(word_count~genre,data=total_four_songs, main = "Lyrics Length between Country & Pop",col=(c("pink","light blue")),alpha=0.8,
-   xlab="Genre", ylab="lyrics Length")
-
-```
-
-```{r}
-# Dummy data
-a <- seq(129,1)+4*runif(129,0.4)
-b <- seq(1,129)^2+runif(129,0.98)
- 
-# Set the layout
-nf <- layout(
-  matrix(c(1,1,2,3), ncol=2, byrow=TRUE), 
-  widths=c(3,1), 
-  heights=c(2,2)
-)
-#Add the plots
-total_four_songs %>%
-  ggplot(aes(x=genre, y=word_count, fill=genre),col=(c("pink","light blue"))) +
-    geom_boxplot() +
-    scale_fill_viridis(discrete = TRUE, alpha=0.6, option="A") +
-    theme_ipsum() +
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle("Boxplot - Lyrics Length Comparison") +
-    xlab("Genre")
-
-```
-
-
-
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-library(tidyverse)
-library(hrbrthemes)
-library(viridis)
-
-total_four_songs %>%
-  ggplot(aes(x=genre, y=word_count, fill=genre)) +
-    geom_violin() +
-    scale_fill_viridis(discrete = TRUE, alpha=0.6, option="A") +
-    theme_ipsum() +
-    theme(
-      legend.position="none",
-      plot.title = element_text(size=11)
-    ) +
-    ggtitle("Violin chart - Lyrics Length between Country & Pop") +
-    xlab("Genre")
-
-
-```
-
 
 
 
@@ -241,13 +211,16 @@ Next, let's analyze their corresponding high frequency words and use it to defin
 Pop and country are simiar. 
 If try to make Love, baby .. etc. as new stop words, see what's left .. 
 
-#### 3.1 Pop
+The most frequent word in Pop and ___ is Love. It contains similar topics including ____ (remove love)
+
+
+#### 2.1 Pop
 ```{r}
 tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_pop[1:10,]$n, las = 2, names.arg = tidy_pop[1:10,]$word,
+barplot(tidy_pop[1:20,]$n, las = 2, names.arg = tidy_pop[1:20,]$word,
         col ="pink", main ="Pop - Most frequent words",
         ylab = "Word frequencies")
 ```
@@ -267,7 +240,7 @@ wordcloud (corpus_pop, scale=c(5,0.5), max.words=100, random.order=FALSE,
 
 
 
-#### 3.2 Country
+#### 2.2 Country
 ```{r}
 tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
@@ -278,7 +251,7 @@ barplot(tidy_country[1:10,]$n, las = 2, names.arg = tidy_country[1:10,]$word,
         ylab = "Word frequencies")
 ```
 
-#### 3.3 HipHops
+#### 2.3 HipHops
 
 ```{r}
 tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = stemmedwords)%>%
@@ -292,7 +265,7 @@ barplot(tidy_hiphop[1:10,]$n, las = 2, names.arg = tidy_hiphop[1:10,]$word,
 ```
 
 
-#### 3.4 R&B
+#### 2.4 R&B
 ```{r}
 tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
