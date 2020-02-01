@@ -208,10 +208,11 @@ total_four_songs <- total_four_songs[-c(29439,29442,33045,28849),]
 
 Next, let's analyze their corresponding high frequency words and use it to define its topics
 
-Pop and country are simiar. 
-If try to make Love, baby .. etc. as new stop words, see what's left .. 
+Pop and country are simiar. The most frequent words include Love, baby, heart, girl/boy.
 
-The most frequent word in Pop and ___ is Love. It contains similar topics including ____ (remove love)
+Pop contains more words:
+
+Country songs contain more words: 
 
 
 #### 2.1 Pop
@@ -220,10 +221,22 @@ tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmed
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_pop[1:20,]$n, las = 2, names.arg = tidy_pop[1:20,]$word,
+barplot(tidy_pop[1:30,]$n, las = 2, names.arg = tidy_pop[1:30,]$word,
         col ="pink", main ="Pop - Most frequent words",
         ylab = "Word frequencies")
 ```
+
+```{r}
+library(tidyr)
+
+ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genre))+
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  facet_wrap(~genre, ncol = 2, scales = "free_x")
+```
+
+
+
+
 
 ```{r}
 # word cloud for pop
@@ -235,7 +248,7 @@ tidy_pop_try <- unnest_tokens(pop, output='word',token='words',input = stemmedwo
 corpus_pop <- VCorpus(VectorSource(tidy_pop_try$word))
 
 wordcloud (corpus_pop, scale=c(5,0.5), max.words=100, random.order=FALSE, 
-           rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(8, 'Dark2'))
+           rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(18, 'Dark2'))
 ```
 
 
@@ -246,7 +259,7 @@ tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input =
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_country[1:10,]$n, las = 2, names.arg = tidy_country[1:10,]$word,
+barplot(tidy_country[1:30,]$n, las = 2, names.arg = tidy_country[1:30,]$word,
         col ="light blue", main ="Country - Most frequent words",
         ylab = "Word frequencies")
 ```
@@ -258,7 +271,7 @@ tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = s
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_hiphop[1:10,]$n, las = 2, names.arg = tidy_hiphop[1:10,]$word,
+barplot(tidy_hiphop[1:20,]$n, las = 2, names.arg = tidy_hiphop[1:20,]$word,
         col ="orange", main ="Hiphop - Most frequent words",
         ylab = "Word frequencies")
 
@@ -271,7 +284,7 @@ tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwo
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_RB[1:10,]$n, las = 2, names.arg = tidy_RB[1:10,]$word,
+barplot(tidy_RB[1:20,]$n, las = 2, names.arg = tidy_RB[1:20,]$word,
         col ="black", main ="R&B - Most frequent words",
         ylab = "Word frequencies")
 ```
