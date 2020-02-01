@@ -16,6 +16,7 @@ Term: Srping 2020
  songs, by analyzing the lyrics database. 
 
 The "lyrics.csv" dataset is available by this [link] (https://www.dropbox.com/s/3tfv5v73z0ec8vr/lyrics.csv?dl=0)
+[lyrics.csv](https://www.dropbox.com/s/3tfv5v73z0ec8vr/lyrics.csv?dl=0)
 
 Following [suggestions](http://nicercode.github.io/blog/2013-04-05-projects/) by [RICH FITZJOHN](http://nicercode.github.io/about/#Team) (@richfitz). This folder is orgarnized as follows.
 
