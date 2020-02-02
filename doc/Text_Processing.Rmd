@@ -229,116 +229,97 @@ Pop contains more words:
 Country songs contain more words: home, hand
 
 
-#### 2.1 Pop
+#### 2.1 Pop and Country
+
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
+# scatter plot
+# pop
 tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
-
 tidy_pop = tidy_pop[-c(3,6,10,23,33),]
-
-# barplot
-barplot(tidy_pop[1:30,]$n, las = 2, names.arg = tidy_pop[1:30,]$word,
-        col ="pink", main ="Pop - Most frequent words",
-        ylab = "Word frequencies")
-
-```
-
-
-```{r}
-# scatter plot
+# select top 40
 par(mfrow=c(1,2))
+tidy_pop1 = tidy_pop[1:40,]
 
-tidy_pop1 = tidy_pop[1:50,]
-ggplot(data=tidy_pop1, aes(x=word,y=n),color = tidy_pop1$word)+
-  geom_point() +
+ggplot(data=tidy_pop1, aes(x=word,y=n),color = tidy_pop1$word,main ="Pop - Most frequent words",
+        ylab = "Words")+
+  ggtitle("Pop songs - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  geom_point(col="lavenderblush", pch=19, cex=2) +
   geom_text(label=tidy_pop1$word)
 
-tidy_country1 = tidy_country[1:50,]
 
-ggplot(data=tidy_country1, aes(x=word,y=n),color = tidy_country1$word)+
-  geom_point() +
-  geom_text(label=tidy_country1$word)
-
-
-```
-
-
-
-
-
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-# word cloud for pop
-install.packages('wordcloud')
-library(wordcloud)
-
-# Converting the text file into a Corpus
-corpus_pop <- VCorpus(VectorSource(tidy_pop$word))
-
-wordcloud (corpus_pop, scale=c(5,0.5), max.words=100, random.order=FALSE, 
-           rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(18, 'Dark2'))
-```
-
-
-
-#### 2.2 Country
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
+# country
 tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
-
 tidy_country = tidy_country[-c(3,4,6,15,29),]
+# select top 40
+tidy_country1 = tidy_country[1:40,]
 
-tidy_country1 = tidy_country[1:50,]
-
-# barplot
-barplot(tidy_country[1:30,]$n, las = 3, names.arg = tidy_country[1:30,]$word,
-        col ="light blue", main ="Country - Most frequent words",
-        ylab = "Word frequencies")
-```
-
-
-```{r}
-pop_country_50 = bind_rows(tidy_country1,tidy_pop1)
-
-barplot(pop_country_50$n, las = 2, names.arg = pop_country_50$word, group=
-        col ="light blue", main ="Country - Most frequent words",
-        ylab = "Word frequencies")
+ggplot(data=tidy_country1, aes(x=word,y=n),color = tidy_country1$word)+
+  geom_point(col="lightblue2", pch=19, cex=2) +
+  ggtitle("Country songs - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  geom_text(label=tidy_country1$word)
 
 ```
 
 
 
 
-#### 2.3 HipHops
+
+
+
+
+#### 2.2 HipHops and R&B
 
 HipHops and R&B's most frequent words is also Love. Other than that, they both include baby, time, girl.
 
 HipHops contains more *** negative words:, 
 
-R&B is more similar to pop/country songs regarding word frequency. 
+also words like: ya, yo, ... typical hiphops
 
+R&B is more similar to pop/country songs compared to hiphops, regarding word frequency. 
 
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
+# hiphop 
 tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
-# barplot
-barplot(tidy_hiphop[1:30,]$n, las = 2, names.arg = tidy_hiphop[1:30,]$word,
-        col ="orange", main ="Hiphop - Most frequent words",
-        ylab = "Word frequencies")
+tidy_hiphop = tidy_hiphop[-c(9,11,12,14,17,27,30),]
+
+# select top 40
+par(mfrow=c(1,2))
+tidy_hiphop1 = tidy_hiphop[1:40,]
+
+ggplot(data=tidy_hiphop1, aes(x=word,y=n),color = tidy_hiphop1$word,main ="Pop - Most frequent words",
+        ylab = "Words")+
+  ggtitle("Hip hops - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  geom_point(col="lavenderblush", pch=19, cex=2) +
+  geom_text(label=tidy_hiphop1$word)
+
 
 ```
 
 
-#### 2.4 R&B
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
 tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
-# barplot
-barplot(tidy_RB[1:30,]$n, las = 2, names.arg = tidy_RB[1:30,]$word,
-        col ="black", main ="R&B - Most frequent words",
-        ylab = "Word frequencies")
+tidy_RB = tidy_RB[-c(6,11,22,24,27),]
+
+# select top 40
+tidy_RB1 = tidy_RB[1:40,]
+
+ggplot(data=tidy_RB1, aes(x=word,y=n),color = tidy_RB1$word,main ="Pop - Most frequent words",
+        ylab = "Words")+
+  ggtitle("R&B - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  geom_point(col="lavenderblush", pch=19, cex=2) +
+  geom_text(label=tidy_RB1$word)
+
 ```
 
 
