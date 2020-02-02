@@ -7,7 +7,7 @@
 ### [Project Description](doc/)
 
 
-Term: Srping 2020
+Term: Spring 2020
 
 + Projec title: Tell the difference between Country & Pop, Hiphop & R&B
 + This project is conducted by [Huizhe (Sunny) ZHU]
