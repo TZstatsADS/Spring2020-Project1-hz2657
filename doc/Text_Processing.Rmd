@@ -315,6 +315,9 @@ Hip hop and R&B are more similar, tend to have stronger emotions Hip-hop tends t
 Country and Pop are more similar. Their emotions are more gentle, and they both contains balanced emotions. 
 
 
+#can use scatter plot that transfer each point to its word meaning, larger word represent more frequency, 
+merge them in 2 and 2 graphs
+
 ```{r}
 positive <- get_sentiments("bing") %>%
   filter(sentiment == "positive")
