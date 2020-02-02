@@ -9,10 +9,11 @@ output:
   pdf_document: default
 ---
 \
-![](https://camo.githubusercontent.com/fea5a6870762e194b7abab73963021aa20de309b/68747470733a2f2f626c6f672e6f75702e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031362f30322f313236302d6d757369632e6a7067)
+\
+![](https://api.time.com/wp-content/uploads/2018/04/listening-to-music-headphones.jpg?w=800&quality=85)
 \
 
-People on internet are arguing about the difference between Country music and Pop music. Pop represents 'popular', while country music is also popular in many regions including the US, and that makes it difficult to distuinguish the two genres. Meanwhile, Rhythm & Blues (R&B) is considered as a mix of Pop, Hip-Hop etc, thus it is also difficult to distinguish Hiphop or R&B. 
+People on internet are arguing about the difference between Country and Pop songs, Hiphop and R&B songs. Pop represents 'popular', while country music is also popular in many regions including the U.S., which makes them so similar to each other. Meanwhile, Rhythm & Blues (R&B) is considered as a mix of Pop and Hip-Hop songs, thus it is also difficult to distinguish Hiphop and R&B. 
 
 Given the 'lyrics' database that contains more than 120,000 songs, we here have the chance to identify the differences among these genres by real examples. 
 
@@ -41,9 +42,15 @@ library(viridis)
 
 ```{r, include = FALSE}
 #### Step 1 - Load the data
-library(readr)
-raw_lyrics <- read.csv("lyrics.csv", stringsAsFactors = FALSE)
+#library(readr)
+#raw_lyrics <- read.csv("lyrics.csv", stringsAsFactors = FALSE)
 ```
+
+```{r,include = FALSE}
+load('../data/lyrics.RData') 
+raw_lyrics = dt_lyrics
+```
+
 
 
 ```{r text processing in tm, include = FALSE}
@@ -141,7 +148,7 @@ save(raw_lyrics1, file="../output/processed_lyrics3.RData")
 ```
 
 
-In the lyrics dataset, there are 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B songs. 
+The lyrics dataset contains 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B songs. 
 
 ```{r,include = FALSE}
 #### Step 1 - Create sub-dataset
@@ -209,11 +216,15 @@ total_four_songs <- total_four_songs[-c(29439,29442,33045,28849),]
 
 #### 2. Compare high-frequency words
 
-Next, let's analyze their corresponding high frequency words and use it to define its topics
+Next, let's analyze their corresponding high frequency words and use it to define its topics. 
 
-Pop and country are simiar. The most frequent words include Love, baby, heart, girl/boy, eyes, world.
+First, it's an interesting phenomenon that the most frequent wordn in these four genres is love. 
 
-Pop contains more words: chorus, 
+Then, we can find that Pop and country have not much difference regarding frequeny words mentioned in lyrics. 
+
+The most frequent words include Love, baby, heart, girl/boy, eyes, world.
+
+Pop contains more words: 
 
 Country songs contain more words: home, hand
 
@@ -223,18 +234,32 @@ Country songs contain more words: home, hand
 tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
+tidy_pop = tidy_pop[-c(3,6,10,23,33),]
+
 # barplot
 barplot(tidy_pop[1:30,]$n, las = 2, names.arg = tidy_pop[1:30,]$word,
         col ="pink", main ="Pop - Most frequent words",
         ylab = "Word frequencies")
+
 ```
 
-```{r,echo=FALSE, message=FALSE, warning=FALSE}
-library(tidyr)
 
-ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genre))+
-  geom_bar(stat = "identity", show.legend = FALSE) +
-  facet_wrap(~genre, ncol = 2, scales = "free_x")
+```{r}
+# scatter plot
+par(mfrow=c(1,2))
+
+tidy_pop1 = tidy_pop[1:50,]
+ggplot(data=tidy_pop1, aes(x=word,y=n),color = tidy_pop1$word)+
+  geom_point() +
+  geom_text(label=tidy_pop1$word)
+
+tidy_country1 = tidy_country[1:50,]
+
+ggplot(data=tidy_country1, aes(x=word,y=n),color = tidy_country1$word)+
+  geom_point() +
+  geom_text(label=tidy_country1$word)
+
+
 ```
 
 
@@ -245,10 +270,9 @@ ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genr
 # word cloud for pop
 install.packages('wordcloud')
 library(wordcloud)
-tidy_pop_try <- unnest_tokens(pop, output='word',token='words',input = stemmedwords) 
 
 # Converting the text file into a Corpus
-corpus_pop <- VCorpus(VectorSource(tidy_pop_try$word))
+corpus_pop <- VCorpus(VectorSource(tidy_pop$word))
 
 wordcloud (corpus_pop, scale=c(5,0.5), max.words=100, random.order=FALSE, 
            rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(18, 'Dark2'))
@@ -261,11 +285,28 @@ wordcloud (corpus_pop, scale=c(5,0.5), max.words=100, random.order=FALSE,
 tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
   count(word,sort = TRUE)
 
+tidy_country = tidy_country[-c(3,4,6,15,29),]
+
+tidy_country1 = tidy_country[1:50,]
+
 # barplot
-barplot(tidy_country[1:30,]$n, las = 2, names.arg = tidy_country[1:30,]$word,
+barplot(tidy_country[1:30,]$n, las = 3, names.arg = tidy_country[1:30,]$word,
         col ="light blue", main ="Country - Most frequent words",
         ylab = "Word frequencies")
 ```
+
+
+```{r}
+pop_country_50 = bind_rows(tidy_country1,tidy_pop1)
+
+barplot(pop_country_50$n, las = 2, names.arg = pop_country_50$word, group=
+        col ="light blue", main ="Country - Most frequent words",
+        ylab = "Word frequencies")
+
+```
+
+
+
 
 #### 2.3 HipHops
 
@@ -282,7 +323,7 @@ tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = s
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_hiphop[1:20,]$n, las = 2, names.arg = tidy_hiphop[1:20,]$word,
+barplot(tidy_hiphop[1:30,]$n, las = 2, names.arg = tidy_hiphop[1:30,]$word,
         col ="orange", main ="Hiphop - Most frequent words",
         ylab = "Word frequencies")
 
@@ -295,7 +336,7 @@ tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwo
   count(word,sort = TRUE)
 
 # barplot
-barplot(tidy_RB[1:20,]$n, las = 2, names.arg = tidy_RB[1:20,]$word,
+barplot(tidy_RB[1:30,]$n, las = 2, names.arg = tidy_RB[1:30,]$word,
         col ="black", main ="R&B - Most frequent words",
         ylab = "Word frequencies")
 ```
@@ -321,7 +362,7 @@ Country and Pop are more similar. Their emotions are more gentle, and they both 
 #can use scatter plot that transfer each point to its word meaning, larger word represent more frequency, 
 merge them in 2 and 2 graphs
 
-```{r}
+```{r, include=FALSE}
 positive <- get_sentiments("bing") %>%
   filter(sentiment == "positive")
 
@@ -330,12 +371,12 @@ negative <- get_sentiments("bing") %>%
 ```
 
 The top 10 positive words in Pop songs include: 
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 tidy_pop %>%
   semi_join(positive) 
 ```
-The top 10 positive words in Pop songs include: 
-```{r}
+The top 10 negative words in Pop songs include: 
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 library(dplyr)
 tidy_pop_negative <- tidy_pop%>%
   semi_join(negative) 
@@ -346,12 +387,11 @@ we count up how many positive and negative words there are in each genre. Let’
 
 Referece:https://www.tidytextmining.com/sentiment.html from *Text mining with R*
 
-# sentiment for each genre 
+# Sentiment for each genre 
 
-
+```{r,echo=FALSE, message=FALSE, include=FALSE}
 # Combine the first 400 songs of each genre
 
-```{r}
 pop_400 = pop[1:400,]
 country_400 = country[1:400,]
 hiphop_400 = hiphop[1:400,]
@@ -366,7 +406,7 @@ tidy_total_400 <- unnest_tokens(total_400, output = 'word', token = 'words', inp
 
 From the diagram, we can see, Hip-hop and R&B tend to have stronger emotions, while country and pop are more gentle.
 
-```{r}
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyr)
 bing <- get_sentiments("bing")
 
