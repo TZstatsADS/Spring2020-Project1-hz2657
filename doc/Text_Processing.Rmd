@@ -9,7 +9,7 @@ output:
   pdf_document: default
 ---
 \
-![](https://github.com/TZstatsADS/Spring2018-Project1-Hongyu-Li/blob/master/doc/proj1_report.Rmd)
+![](https://camo.githubusercontent.com/fea5a6870762e194b7abab73963021aa20de309b/68747470733a2f2f626c6f672e6f75702e636f6d2f77702d636f6e74656e742f75706c6f6164732f323031362f30322f313236302d6d757369632e6a7067)
 \
 
 People on internet are arguing about the difference between Country music and Pop music. Pop represents 'popular', while country music is also popular in many regions including the US, and that makes it difficult to distuinguish the two genres. Meanwhile, Rhythm & Blues (R&B) is considered as a mix of Pop, Hip-Hop etc, thus it is also difficult to distinguish Hiphop or R&B. 
