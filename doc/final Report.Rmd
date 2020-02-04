@@ -1,0 +1,441 @@
+---
+title: 'Listen: Pop or Country, Hiphop or R&B'
+author: "Huizhe (Sunny) ZHU"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  html_notebook: default
+---
+\
+\
+![](https://api.time.com/wp-content/uploads/2018/04/listening-to-music-headphones.jpg?w=800&quality=85)
+\
+
+
+People on internet are arguing about the difference between Country and Pop songs, Hiphop and R&B songs. Pop represents 'popular', while country music is also popular in many regions including the U.S., which makes them very similar to each other. Meanwhile, Hip-Hop is considered as one of Rhythm & Blues (R&B)'s components, for this reason, it is also difficult to distinguish Hip-Hop and R&B music. 
+
+Given the 'lyrics' database that contains more than 120,000 songs, we here have the chance to discover the differences among these genres by real world examples. The lyrics dataset contains 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B songs. 
+
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r load libraries, message=FALSE, warning=FALSE, include = FALSE}
+#### Step 0 - Install packages & Load libraries
+library(tm)
+library(data.table)
+library(tidytext)
+library(tidyverse)
+library(DT)
+```
+
+
+```{r, include = FALSE}
+#### Step 1 - Load the data
+#library(readr)
+#raw_lyrics <- read.csv("lyrics.csv", stringsAsFactors = FALSE)
+```
+
+```{r,include = FALSE}
+load('../data/lyrics.RData') 
+raw_lyrics = dt_lyrics
+```
+
+
+
+```{r text processing in tm, include = FALSE}
+#### Step 2 - Preliminary cleaning of text
+#Convert letters to the lower case, remove punctuation, numbers, empty words and extra white space.
+
+leadingWhitespace <- content_transformer(function(x) str_trim(x, side = "both"))
+
+# remove stop words
+data("stop_words")
+word <- c("lot", "today", "months", "month", "wanna", "wouldnt", "wasnt", "ha", "na", "ooh", "da",
+        "gonna", "im", "dont", "aint", "wont", "yeah", "la", "oi", "nigga", "fuck",
+          "hey", "year", "years", "last", "past", "feel")
+stop_words <- c(stop_words$word, word)
+
+```
+
+
+```{r,include = FALSE}
+# clean the data and make a corpus
+corpus <- VCorpus(VectorSource(raw_lyrics$lyrics))%>%
+  tm_map(content_transformer(tolower))%>%
+  tm_map(removePunctuation)%>%
+  tm_map(removeWords, character(0))%>%
+  tm_map(removeWords, stop_words)%>%
+  tm_map(removeNumbers)%>%
+  tm_map(stripWhitespace)%>%
+  tm_map(leadingWhitespace)
+```
+
+
+```{r stemming, include = FALSE}
+#### Step 3 - Stemming and converting to tidy object
+#Stemming reduces a word to its word *stem*. Each row contains 1 song - its stemmed words - Note: 11 empty lines 
+stemmed <- tm_map(corpus, stemDocument) %>%
+  tidy() %>%
+  select(text)
+```
+
+
+```{r tidy dictionary,include = FALSE}
+#### Step 4 - Tokenization on original words, *9.51* million rows (words) in total, one column
+dict <- tidy(corpus) %>%
+  select(text) %>%
+  unnest_tokens(dictionary, text)
+```
+
+
+```{r tidy stems with dictionary,include = FALSE}
+#### Step 5 - Tokenization on stemmed words  -  Add ID = row_number, dict = original word, 9.51 million rows, 3 columns
+completed <- stemmed %>%
+  mutate(id = row_number()) %>%
+  unnest_tokens(stems, text) %>%
+  bind_cols(dict) 
+```
+
+
+
+```{r stem completion, warning=FALSE, message=FALSE,include = FALSE}
+#### Step 6 - Stem completion
+#Picking the original word (from the same root) with the highest frequency. The new column created -  'word' - will be used to replace stem, which is sometimes hard for people to understand. 
+completed1 <- completed %>%
+  group_by(stems) %>%
+  count(dictionary) %>%
+  mutate(word = dictionary[which.max(n)]) %>%
+  ungroup() %>%
+  select(stems, word) %>%
+  distinct() %>%
+  right_join(completed) %>%
+  select(-stems)
+```
+
+
+```{r reverse unnest, message=FALSE,include = FALSE}
+#### Step 7 - Pasting stem completed individual words into their respective lyrics
+#Put 'word' generated from Step 6, back to each song row - each row contains words like before - but the words are transforme, from -> stemmed -> completed stem
+completed2 <- completed1 %>%
+  group_by(id) %>%
+  summarise(stemmedwords= str_c(word, collapse = " ")) %>%
+  ungroup()
+```
+
+
+```{r cleaned hm_data, warning=FALSE, message=FALSE,include = FALSE}
+#### Step 8 - Keeping a track of the processed lyrics with their own ID
+raw_lyrics1 <- raw_lyrics %>%
+  mutate(id = row_number()) %>%
+  inner_join(completed2)
+```
+
+
+```{r export data,message=FALSE,include = FALSE}
+#### Step 9 - Exporting the processed text data into a CSV file
+save(raw_lyrics1, file="../output/processed_lyrics3.RData")
+```
+
+
+
+```{r,include = FALSE}
+# Here to conclude: The lyrics dataset contains 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B songs. 
+#### Step 1 - Create sub-dataset
+table(raw_lyrics1$genre)
+```
+
+
+```{r,include = FALSE}
+# subset the corresponding genres
+country = raw_lyrics1[raw_lyrics1$genre == 'Country',]
+pop = raw_lyrics1[raw_lyrics1$genre == 'Pop',]
+hiphop = raw_lyrics1[raw_lyrics1$genre == 'Hip-Hop',]
+RB = raw_lyrics1[raw_lyrics1$genre == 'R&B',]
+```
+
+
+\
+
+#### 1. Compare lyrics length
+
+According to the boxplot below, we can observe that Pop music tends to be longer and has a larger variance than country songs , while country music tends to be shorter and has a smaller variance. 
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+pop_country = bind_rows(pop,country)
+
+pop_country$word_count <- str_count(pop_country$lyrics, '\\s+')+1
+
+pop_country <- pop_country[-c(621,1665),]
+
+boxplot(word_count~genre,data=pop_country, main = "Lyrics Length between Country & Pop",col=(c("lightblue2","lavenderblush")),alpha=0.2, ylab="lyrics Length",   xlab="Genre",cex.lab=0.8, cex.axis=0.8, cex.main=1, cex.sub=0.5)
+```
+
+For Hip-Hop and R&B, the difference is more significant. We can see from the boxplot that on average, Hip-Hop music is longer and has a larger variance, while R&B tends to be shorter and has smaller variance. 
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+hiphop_RB = bind_rows(hiphop,RB)
+
+hiphop_RB$word_count <- str_count(hiphop_RB$lyrics, '\\s+')+1
+
+hiphop_RB <- hiphop_RB[-c(3208,3211),]
+
+boxplot(word_count~genre,data=hiphop_RB, main = "Lyrics Length between Hip-Hop & R&B",col=(c("lightblue2","lavenderblush")),alpha=0.8,   xlab="Genre", ylab="lyrics Length",cex.lab=0.8, cex.axis=0.8, cex.main=1, cex.sub=0.5)
+```
+
+
+
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr)
+install.packages('ngram')
+library(ngram)
+total_four_songs = bind_rows(pop,country,hiphop,RB)
+
+library(stringr)
+total_four_songs$word_count <- str_count(total_four_songs$lyrics, '\\s+')+1
+
+# remove outliers - remove rows 
+total_four_songs <- na.omit(total_four_songs)
+total_four_songs <- total_four_songs[-c(29439,29442,33045,28849),]
+
+```
+
+
+
+
+
+#### 2. Compare high-frequency words
+\
+Next, let's analyze the high-frequency words from different genres and check if there is a difference. 
+
+\
+
+#### 2.1 Pop and Country
+Firstly, it's an interesting phenomenon that the most frequent word in all these genres is 'love'. Secondly, we can see that Pop and Country music's most frequent words in lyrics are very similar, they both include 'baby', 'heart', 'girl', 'boy', 'eyes', 'world' etc.. There is not much difference between Pop and Country music, however, Country music does contain more words such as 'home' and 'hand'. 
+
+*Note: The frequency on the y-axis is calculated by the word count/the number of songs from that genre;*
+
+\
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+# scatter plot
+# pop
+tidy_pop <- unnest_tokens(pop, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+tidy_pop = tidy_pop[-c(3,6,10,23,33),]
+# select top 40
+par(mfrow=c(1,2))
+tidy_pop1 = tidy_pop[1:30,]
+tidy_pop1[,2] = tidy_pop1[,2]/18697
+
+
+ggplot(data=tidy_pop1, aes(x=word,y=n,color = tidy_pop1$word))+
+  ggtitle("Pop songs - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  geom_point(col="lavenderblush", pch=19, cex=2) +
+  theme(axis.text.x=element_blank())+  theme(legend.position = "none")+
+  geom_text(label=tidy_pop1$word)
+
+
+# country
+tidy_country <- unnest_tokens(country, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+tidy_country = tidy_country[-c(3,4,6,15,29),]
+# select top 40
+tidy_country1 = tidy_country[1:30,]
+tidy_country1[,2] = tidy_country1[,2]/7534
+
+
+ggplot(data=tidy_country1, aes(x=word,y=n, color = tidy_country1$word))+
+  geom_point(col="lightblue2", pch=19, cex=2) +
+  ggtitle("Country songs - Most frequent words") +
+  theme(axis.text.x=element_blank())+  theme(legend.position = "none")+
+  xlab("Words") + ylab("Frequency")+
+  geom_text(label=tidy_country1$word)
+
+```
+
+
+
+\
+
+#### 2.2 HipHops and R&B
+
+HipHops and R&B's most frequent word is also 'love'. In addition, they both include the same frequent words such as 'baby', 'time', 'girl' .. etc.
+\
+
+Other than that, as illustrated from the graph, we can observe that there is a distinguishable differene between Hip-Hops and R&B music. (1). Hip-Hops contains large amount of rude words, as shown in the graph. For the report purpose, some words are modified with '*'. (2). In addition, Hip-Hop music also contains words such as 'ya', 'yo', 'rock'... which are considered as typical Hip-Hops words. In this case, these words can be used to identify Hip-Hop music as well. (3). Hip-Hop contains more words such as 'money', 'hit', 'game' etc. compared to R&B. Regarding the high-frequency words in R&B music, we can conclude that R&D is more similar to Pop and Country music compare to Hip-Hop. 
+
+\
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+# hiphop 
+tidy_hiphop <- unnest_tokens(hiphop, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+
+tidy_hiphop = tidy_hiphop[-c(9,11,12,14,17,27,30),]
+
+# select top 40
+par(mfrow=c(1,2))
+tidy_hiphop1 = tidy_hiphop[1:30,]
+
+tidy_hiphop1[2,1]= 'sh*t'
+tidy_hiphop1[8,1]= 'n**gas'
+tidy_hiphop1[9,1]= 'b**ch'
+tidy_hiphop1[14,1]= 'a*s'
+
+tidy_hiphop1[,2] = tidy_hiphop1[,2]/8905
+
+ggplot(data=tidy_hiphop1, aes(x=word,y=n))+
+  ggtitle("Hip-Hops - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  theme(axis.text.x=element_blank())+  theme(legend.position = "none")+
+  geom_point(col="lightblue2", pch=19, cex=2) +
+  geom_text(label=tidy_hiphop1$word)
+
+
+```
+
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+tidy_RB <- unnest_tokens(RB, output = 'word', token = 'words', input = stemmedwords)%>%
+  count(word,sort = TRUE)
+
+tidy_RB = tidy_RB[-c(6,11,22,24,27),]
+
+# select top 40
+tidy_RB1 = tidy_RB[1:30,]
+tidy_RB1[,2] = tidy_RB1[,2]/2174
+
+
+ggplot(data=tidy_RB1, aes(x=word,y=n))+
+  ggtitle("R&B - Most frequent words") +
+  xlab("Words") + ylab("Frequency")+
+  theme(legend.position = "none")+
+    theme(axis.text.x=element_blank())+
+  geom_point(col="lavenderblush", pch=19, cex=2) +
+  geom_text(label=tidy_RB1$word)
+
+```
+
+
+
+\
+
+#### 3. Compare their emotions
+
+Now let's check the sentiment of these genres!  We conduct sentiment analysis by comparing and illustrating the sentiment scores for these 4 different types of genres. As shown in the graph, regarding emotions, Hip-Hop and R&B are more similar, as they contain stronger emotions. However,  Hip-Hop tends to have more negative emotion and R&B music tends to have more positive emotion.  For Country and Pop music, they are more similar to each other, as their emotions are more gentle, and both of they contain more balanced emotions. 
+
+
+```{r, include=FALSE}
+positive <- get_sentiments("bing") %>%
+  filter(sentiment == "positive")
+
+negative <- get_sentiments("bing") %>%
+  filter(sentiment == "negative")
+```
+
+```{r,include=FALSE}
+#The top 10 positive words in Pop songs include: 
+tidy_pop %>%
+  semi_join(positive) 
+
+#The top 10 negative words in Pop songs include: 
+
+library(dplyr)
+tidy_pop_negative <- tidy_pop%>%
+  semi_join(negative) 
+head(tidy_pop_negative,10)
+```
+
+\
+
+#### Sentiment for each genre 
+
+```{r,echo=FALSE, message=FALSE, include=FALSE}
+# Combine the first 400 songs of each genre
+
+pop_400 = pop[1:400,]
+country_400 = country[1:400,]
+hiphop_400 = hiphop[1:400,]
+RB_400 = RB[1:400,]
+
+total_400 = bind_rows(pop_400,country_400,hiphop_400,RB_400)
+
+tidy_total_400 <- unnest_tokens(total_400, output = 'word', token = 'words', input = stemmedwords)
+
+```
+
+
+
+```{r,echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyr)
+bing <- get_sentiments("bing")
+
+songs_sentiment_try <- tidy_total_400 %>%
+  inner_join(bing) %>%
+  count(genre,song,sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+
+ggplot(data = songs_sentiment_try, aes(x=song,y=sentiment, fill=genre,color=genre))+
+  geom_bar(stat = "identity", show.legend = FALSE) +theme(axis.text.x=element_blank())+  
+    xlab("Songs") + ylab("Sentiment analysis")+
+  facet_wrap(~genre, ncol = 2, scales = "free_x")
+
+```
+
+\
+
+#### Summary 
+
+**Lyrics length:**
+Pop music tends to be longer and has a larger variance compared to Country music. For Hip-Hop and R&B, we can see that on average, Hip-Hop tends to be longer than R&B and has a larger variance, while R&B tends to be shorter and has smaller variance. 
+
+**Frequent words:**
+Pop and Country music do not have much difference regarding frequent words in lyrics, they are very similar. However, Country music does contain more words such as 'home' and 'hand'. 
+HipHop music contains more rude words, also contains words such as 'ya' and 'yo',  which are considered as typical HipHop language. 
+R&B is more similar to Pop/Country songs compared to HipHops, regarding word frequency. 
+
+**Emotion variation:**
+Comparing the sentiment score for these 4 different types of songs, we can conclude that Hip-Hop and R&B music tend to have stronger emotion, while country and pop are more gentle. Hip-hop tends to have more negative words that R&B, and Country and Pop music are more similar to each other as they both contains balanced emotions. 
+\
+
+**In conclusion**, there is significant difference between Pop and Country music in lyrics length, but their frequent words and emotion variation are quite similar. For Hip-Hop and R&B, they can be distinguished by all three factors discussed above: R&B tends to be shorter, more similar to Pop/Country songs regarding frequent words, and has relatively more positive emotion compared to Hip-Hop. 
+
+\
+
+#### References
+Quora (2019) from https://www.quora.com/How-do-you-differentiate-between-a-country-song-and-a-pop-song-just-by-listening-to-it
+
+Silge, J., & Robinson, D. (2019, November 24). Text Mining with R. Retrieved January 27, 2020, from https://www.tidytextmining.com/sentiment.htmlhttps://www.tidytextmining.com/sentiment.html
+
+\
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
