@@ -14,9 +14,9 @@ output:
 \
 
 
-People on internet are arguing about the difference between Country and Pop songs, Hiphop and R&B songs. Pop represents 'popular', while country music is also popular in many regions including the U.S., which makes them so similar to each other. Meanwhile, Rhythm & Blues (R&B) is considered as a mix of Pop and Hip-Hop songs, thus it is also difficult to distinguish Hiphop and R&B. 
+People on internet are arguing about the difference between Country and Pop songs, Hiphop and R&B songs. Pop represents 'popular', while country music is also popular in many regions including the U.S., which makes them very similar to each other. Meanwhile, Rhythm & Blues (R&B) is mixed by Pop and Hip-Hop songs, Hip-Hop is one of its components, for this reason, it is also difficult to distinguish Hip-Hop and R&B. 
 
-Given the 'lyrics' database that contains more than 120,000 songs, we here have the chance to identify the differences among these genres by real examples. 
+Given the 'lyrics' database that contains more than 120,000 songs, we here have the chance to discover the differences among these genres by real world examples. 
 
 
 ```{r setup, include=FALSE}
@@ -170,7 +170,7 @@ RB = raw_lyrics1[raw_lyrics1$genre == 'R&B',]
 
 #### 1. Compare lyrics length
 
-According to the boxplot, we can see Pop music tend to be longer than country songs and has a larger variance, while country music tends to be shorter and has a smaller variance. 
+According to the boxplot below, we can observe that Pop music tends to be longer than country songs and has a larger variance, while country music tends to be shorter and has a smaller variance. 
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
 pop_country = bind_rows(pop,country)
@@ -182,7 +182,7 @@ pop_country <- pop_country[-c(621,1665),]
 boxplot(word_count~genre,data=pop_country, main = "Lyrics Length between Country & Pop",col=(c("lightblue2","lavenderblush")),alpha=0.2, ylab="lyrics Length",   xlab="Genre",cex.lab=0.8, cex.axis=0.8, cex.main=1, cex.sub=0.5)
 ```
 
-For Hip-Hop and R&B, we can see that on average, Hip-Hop tends to be longer than R&B and has a larger variance, while R&B tends to be shorter and has smaller variance. 
+For Hip-Hop and R&B, the difference is more significant. We can see from the boxplot that on average, Hip-Hop tends to be longer and has a larger variance, while R&B tends to be shorter and has smaller variance. 
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
 hiphop_RB = bind_rows(hiphop,RB)
@@ -217,13 +217,13 @@ total_four_songs <- total_four_songs[-c(29439,29442,33045,28849),]
 
 #### 2. Compare high-frequency words
 
-Next, let's analyze the high frequency words of different genres, and check if there is a difference. 
+Next, let's analyze the high-frequency words from different genres and check if there is a difference. 
 
-Firstly, it's an interesting phenomenon that the most frequent word in all these four genres is 'love'. 
+Firstly, it's an interesting phenomenon that the most frequent word in all these genres is 'love'. 
 
-Secondly, we can see that Pop and Country music's frequent words in lyrics are very similar, they both include Love, baby, heart, girl/boy, eyes, world. Country songs contain more words such as home, hand. 
+Secondly, we can see that Pop and Country music's most frequent words in lyrics are very similar, they both include 'baby', 'heart', 'girl', 'boy', 'eyes', 'world'. There is not much difference, however, Country music does contain more words such as 'home', 'hand'. 
 
-*Note: The frequency is calculated by the word counts/number of songs in that genre*
+*Note: The frequency on the y-axis is calculated by the word count/the number of songs from that genre*
 
 \
 
@@ -269,20 +269,16 @@ ggplot(data=tidy_country1, aes(x=word,y=n, color = tidy_country1$word))+
 
 
 
-
-
-
 \
 
 #### 2.2 HipHops and R&B
 
-HipHops and R&B's most frequent words is also 'love'. In addition, they both include the same high frequency words such as baby, time, girl .. etc.
+HipHops and R&B's most frequent word is also 'love'. In addition, they both include the same frequent words such as 'baby', 'time', 'girl' .. etc.
 \
 
-There is a distinguishable differene - HipHops contains large amounts of rude words, as shown inthe graph. For the report purpose, some words are modified with '*'. HipHops also contains words such as 'ya', 'yo', 'rock'... which are considered typical Hiphops words. These words can be used to identify HipHop music. 
+Other than that, as illustrated from the graph, we can observe there is a distinguishable differene between Hip-Hops and R&B. HipHops contains large amount of rude words, as shown in the graph. For the report purpose, some words are modified with '*'. In addition, Hip-Hop music also contains words such as 'ya', 'yo', 'rock'... which are considered as typical Hip-Hops words. In this case, these words can be used to identify Hip-Hop music as well. 
 \
-
-According to the high frequency words in R&B, it is similar to pop/country songs. 
+Regarding the high frequency words in R&B, we can conclude that R&D is similar to Pop and Country music. 
 
 \
 
@@ -342,13 +338,11 @@ ggplot(data=tidy_RB1, aes(x=word,y=n))+
 
 #### 3. Compare their emotions
 
-Now let's check on the sentiment!
+Now let's check on the sentiment of these genres! By comparing and illustrating the sentiment scores for these 4 different types of genres in the graph. 
 \
-Compare the sentiment score for these 4 different types of songs. 
+As shown in the graph, regarding emotions, Hip-hop and R&B are more similar as they tend to contain stronger emotions. As comparison,  Hip-Hop tends to have more negative words and emotions than R&B music. 
 \
-Hip hop and R&B are more similar and they tend to have stronger emotions, and Hip-hop tends to have more negative words that R&B. 
-\
-Country and Pop are more similar. Their emotions are more gentle, and they both contains balanced emotions. 
+For Country and Pop music, they are more similar as their emotions are more gentle and they both contain more balanced emotions. 
 
 
 ```{r, include=FALSE}
@@ -362,8 +356,7 @@ negative <- get_sentiments("bing") %>%
 ```{r,include=FALSE}
 #The top 10 positive words in Pop songs include: 
 tidy_pop %>%
-  semi_join(positive) 
-```
+  semi_join(positive) ```
 
 ```{r,include=FALSE}
 #The top 10 negative words in Pop songs include: 
@@ -373,8 +366,7 @@ tidy_pop_negative <- tidy_pop%>%
   semi_join(negative) 
 head(tidy_pop_negative,10)
 ```
-
-We count up the number of positive and negative words in each genre, and discover a sentiment score for each word and use the added scores to compare setiment along different genres
+We count the number of positive and negative words in each genre, identify a sentiment score for each word, and use the added scores to compare sentiment among different genres
 
 \
 
@@ -395,7 +387,6 @@ tidy_total_400 <- unnest_tokens(total_400, output = 'word', token = 'words', inp
 ```
 
 
-From the diagram, we can see, Hip-hop and R&B tend to have stronger emotions, while country and pop are more gentle.
 
 ```{r,echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyr)
@@ -427,19 +418,16 @@ HipHops contains more rude words, also contains words such as ya, yo, ... which 
 R&B is more similar to pop/country songs compared to hiphops, regarding word frequency. 
 
 **Emotion variation:**
-By comparing the sentiment score for these 4 different types of songs. 
+Compare the sentiment score for these 4 different types of songs, from the diagram, we can see, Hip-Hop and R&B tend to have stronger emotions, while country and pop are more gentle.
 
-Hip hop and R&B are more similar and they tend to have stronger emotions, and Hip-hop tends to have more negative words that R&B. 
-
-Country and Pop are more similar. Their emotions are more gentle, and they both contains balanced emotions. 
+Hip-hop tends to have more negative words that R&B. And Country and Pop music are more similar, as they both contains balanced emotions. 
 
 \
 
 #### References
 Quora (2019) https://www.quora.com/How-do-you-differentiate-between-a-country-song-and-a-pop-song-just-by-listening-to-it
 
-Text mining with R https://www.tidytextmining.com/sentiment.html
-
+Silge, J., & Robinson, D. (2019, November 24). Text Mining with R. Retrieved January 27, 2020, from https://www.tidytextmining.com/sentiment.htmlhttps://www.tidytextmining.com/sentiment.html
 
 \
 
