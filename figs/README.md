@@ -2,4 +2,8 @@
 
 ### Figs folder
 
-The figs directory contains the figures. This directory only contains generated files; that is, one should always be able to delete the contents and regenerate them.
+The figs directory contains the figures used in README and generated from the report, including：
+
+- boxplots of lyrics length comparison
+- scatter plots of words frequency
+- plot of sentiment analysis 
