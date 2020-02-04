@@ -2,5 +2,4 @@
 
 ### Code lib Folder
 
-The lib directory contains various files with function definitions (but only function definitions - no code that actually runs).
-
+For this project, no function is defined. 
