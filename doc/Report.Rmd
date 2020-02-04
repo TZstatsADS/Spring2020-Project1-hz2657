@@ -425,7 +425,7 @@ Hip-hop tends to have more negative words that R&B. And Country and Pop music ar
 \
 
 #### References
-Quora (2019) https://www.quora.com/How-do-you-differentiate-between-a-country-song-and-a-pop-song-just-by-listening-to-it
+Quora (2019) from https://www.quora.com/How-do-you-differentiate-between-a-country-song-and-a-pop-song-just-by-listening-to-it
 
 Silge, J., & Robinson, D. (2019, November 24). Text Mining with R. Retrieved January 27, 2020, from https://www.tidytextmining.com/sentiment.htmlhttps://www.tidytextmining.com/sentiment.html
 
