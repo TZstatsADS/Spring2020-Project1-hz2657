@@ -1,0 +1,151 @@
+---
+title: "Text Preprocessing"
+output: html_notebook
+---
+
+
+
+```{r load libraries, message=FALSE, warning=FALSE, include = FALSE}
+#### Step 0 - Install packages & Load libraries
+library(tm)
+library(data.table)
+library(tidytext)
+library(tidyverse)
+library(DT)
+```
+
+
+```{r, include = FALSE}
+#### Step 1 - Load the data
+#library(readr)
+#raw_lyrics <- read.csv("lyrics.csv", stringsAsFactors = FALSE)
+```
+
+```{r,include = FALSE}
+load('../data/lyrics.RData') 
+raw_lyrics = dt_lyrics
+```
+
+
+
+```{r text processing in tm, include = FALSE}
+#### Step 2 - Preliminary cleaning of text
+#Convert letters to the lower case, remove punctuation, numbers, empty words and extra white space.
+
+leadingWhitespace <- content_transformer(function(x) str_trim(x, side = "both"))
+
+# remove stop words
+data("stop_words")
+word <- c("lot", "today", "months", "month", "wanna", "wouldnt", "wasnt", "ha", "na", "ooh", "da",
+        "gonna", "im", "dont", "aint", "wont", "yeah", "la", "oi", "nigga", "fuck",
+          "hey", "year", "years", "last", "past", "feel")
+stop_words <- c(stop_words$word, word)
+
+```
+
+
+```{r,include = FALSE}
+# clean the data and make a corpus
+corpus <- VCorpus(VectorSource(raw_lyrics$lyrics))%>%
+  tm_map(content_transformer(tolower))%>%
+  tm_map(removePunctuation)%>%
+  tm_map(removeWords, character(0))%>%
+  tm_map(removeWords, stop_words)%>%
+  tm_map(removeNumbers)%>%
+  tm_map(stripWhitespace)%>%
+  tm_map(leadingWhitespace)
+```
+
+
+```{r stemming, include = FALSE}
+#### Step 3 - Stemming and converting to tidy object
+#Stemming reduces a word to its word *stem*. Each row contains 1 song - its stemmed words - Note: 11 empty lines 
+stemmed <- tm_map(corpus, stemDocument) %>%
+  tidy() %>%
+  select(text)
+```
+
+
+```{r tidy dictionary,include = FALSE}
+#### Step 4 - Tokenization on original words, *9.51* million rows (words) in total, one column
+dict <- tidy(corpus) %>%
+  select(text) %>%
+  unnest_tokens(dictionary, text)
+```
+
+
+```{r tidy stems with dictionary,include = FALSE}
+#### Step 5 - Tokenization on stemmed words  -  Add ID = row_number, dict = original word, 9.51 million rows, 3 columns
+completed <- stemmed %>%
+  mutate(id = row_number()) %>%
+  unnest_tokens(stems, text) %>%
+  bind_cols(dict) 
+```
+
+
+
+```{r stem completion, warning=FALSE, message=FALSE,include = FALSE}
+#### Step 6 - Stem completion
+#Picking the original word (from the same root) with the highest frequency. The new column created -  'word' - will be used to replace stem, which is sometimes hard for people to understand. 
+completed1 <- completed %>%
+  group_by(stems) %>%
+  count(dictionary) %>%
+  mutate(word = dictionary[which.max(n)]) %>%
+  ungroup() %>%
+  select(stems, word) %>%
+  distinct() %>%
+  right_join(completed) %>%
+  select(-stems)
+```
+
+
+```{r reverse unnest, message=FALSE,include = FALSE}
+#### Step 7 - Pasting stem completed individual words into their respective lyrics
+#Put 'word' generated from Step 6, back to each song row - each row contains words like before - but the words are transforme, from -> stemmed -> completed stem
+completed2 <- completed1 %>%
+  group_by(id) %>%
+  summarise(stemmedwords= str_c(word, collapse = " ")) %>%
+  ungroup()
+```
+
+
+```{r cleaned hm_data, warning=FALSE, message=FALSE,include = FALSE}
+#### Step 8 - Keeping a track of the processed lyrics with their own ID
+raw_lyrics1 <- raw_lyrics %>%
+  mutate(id = row_number()) %>%
+  inner_join(completed2)
+```
+
+
+
+```{r,include = FALSE}
+# Here to conclude: The lyrics dataset contains 7534 Country songs, 18697 Pop songs,  8905 Hip-Hops, and 2174 R&B songs. 
+#### Step 1 - Create sub-dataset
+table(raw_lyrics1$genre)
+```
+
+
+```{r,include = FALSE}
+# subset the corresponding genres
+country = raw_lyrics1[raw_lyrics1$genre == 'Country',]
+pop = raw_lyrics1[raw_lyrics1$genre == 'Pop',]
+hiphop = raw_lyrics1[raw_lyrics1$genre == 'Hip-Hop',]
+RB = raw_lyrics1[raw_lyrics1$genre == 'R&B',]
+```
+
+
+```{r export data,message=FALSE,include = FALSE}
+#### Step 9 - Exporting the processed text data into a CSV file
+save(raw_lyrics1, file="../output/processed_lyrics3.RData")
+save(country, file="../output/processed_country.RData")
+save(pop, file="../output/processed_pop.RData")
+save(hiphop, file="../output/processed_hiphop.RData")
+save(RB, file="../output/processed_RB.RData")
+```
+
+
+
+
+
+
+
