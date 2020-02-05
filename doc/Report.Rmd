@@ -42,10 +42,11 @@ library(DT)
 According to the boxplot below, we can observe that Pop music tends to be longer and has a larger variance than country songs , while country music tends to be shorter and has a smaller variance. 
 ```{r, include=FALSE}
 # load data
-load('../output/processed_country.RData')
-load("../output/processed_pop.RData")
-load("../output/processed_hiphop.RData")
-load("../output/processed_RB.RData")
+getwd()
+load("../output/country.RData")
+load("../output/pop.RData")
+load("../output/hiphop.RData")
+load("../output/RB.RData")
 ```
 
 
